@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="root"></div>
+</body>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react?dev",
+    "react-dom/client": "https://esm.sh/react-dom/client?dev"
+  }
+}
+</script>
+<script type="text/babel" data-type="module">
+import React, { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function WordleSquare({ value, status }) {
+  const colors = {
+    correct: "#6aaa64",
+    present: "#c9b458",
+    absent: "#787c7e",
+    empty: "#fff",
+  };
+  return (
+    <div
+      className="wordle-square"
+      style={{ backgroundColor: colors[status] || colors.empty }}
+    >
+      {value}
+    </div>
+  );
+}
+
+function WordleBoard({ guesses, currentGuess, targetWord }) {
+  function getGuessStatus(guess) {
+    return guess.split('').map((letter, index) => {
+      if (targetWord[index] === letter) return "correct";
+      else if (targetWord.includes(letter)) return "present";
+      else return "absent";
+    });
+  }
+
+  return (
+    <div className="wordle-board">
+      {[...Array(6)].map((_, rowIndex) => {
+        const guess = guesses[rowIndex] || "";
+        const statuses = rowIndex < guesses.length ? getGuessStatus(guess) : Array(5).fill("empty");
+        return (
+          <div key={rowIndex} className="wordle-row">
+            {[...Array(5)].map((_, colIndex) => (
+              <WordleSquare
+                key={colIndex}
+                value={guess[colIndex] || ""}
+                status={statuses[colIndex]}
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function WordleGame() {
+  const targetWord = "REACT"; // For testing, hardcode the target word.
+  const [guesses, setGuesses] = useState([]);
+  const [currentGuess, setCurrentGuess] = useState("");
+
+  function handleKeyPress(event) {
+    if (event.key === "Enter" && currentGuess.length === 5) {
+      if (currentGuess === targetWord) {
+        alert("Congratulations, you guessed the word!");
+      } else if (guesses.length < 5) {
+        setGuesses([...guesses, currentGuess]);
+        setCurrentGuess("");
+      } else {
+        alert("Game Over! Try Again.");
+      }
+    } else if (event.key === "Backspace") {
+      setCurrentGuess(currentGuess.slice(0, -1));
+    } else if (/^[A-Za-z]$/.test(event.key) && currentGuess.length < 5) {
+      setCurrentGuess(currentGuess + event.key.toUpperCase());
+    }
+  }
+
+  return (
+    <div className="game" onKeyDown={handleKeyPress} tabIndex="0">
+      <h2>Wordle Game</h2>
+      <WordleBoard guesses={guesses} currentGuess={currentGuess} targetWord={targetWord} />
+      <div className="current-guess">{currentGuess}</div>
+      <div className="instructions">
+        Press letters to type, "Enter" to submit, and "Backspace" to delete.
+      </div>
+    </div>
+  );
+}
+
+const root = createRoot(document.getElementById('root'));
+root.render(<WordleGame />);
+
+</script>
+<style>
+body {
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f0f0;
+  margin: 0;
+}
+
+.game {
+  outline: none; /* Required for keyboard input */
+  text-align: center;
+}
+
+.wordle-board {
+  display: grid;
+  grid-template-rows: repeat(6, 50px);
+  gap: 5px;
+}
+
+.wordle-row {
+  display: grid;
+  grid-template-columns: repeat(5, 50px);
+  gap: 5px;
+}
+
+.wordle-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border: 2px solid #d3d6da;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.instructions {
+  margin-top: 20px;
+  color: #555;
+}
+</style>
+</html>
